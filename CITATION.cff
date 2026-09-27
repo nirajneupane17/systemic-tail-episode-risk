@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Systemic Tail Episode Risk: Persistence and Cumulative Severity of Synchronized Extreme-Loss Episodes Across Markets"
+authors:
+  - family-names: Neupane
+    given-names: Niraj
+type: article
+year: 2026
+notes: "Working Paper; multivariate extension of Conditional Tail Episode Risk (TER/CTER)"
+repository-code: "https://github.com/nirajneupane17/systemic-tail-episode-risk"
+keywords: [systemic risk, tail risk, cross-asset contagion, path-dependent risk, extreme-value theory, CoVaR]
+license: MIT

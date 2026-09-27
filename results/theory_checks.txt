@@ -1,0 +1,11 @@
+Prop 3 (Separation):
+  A,B are reorderings of the same daily vectors : True
+  co-exceedance count           A=3  B=3  (equal)
+  portfolio marginal identical  : True  (=> equal portfolio VaR/ES, CoVaR, MES)
+  STER                          A=6.0  B=2.0  (DIFFERENT => STER separates)
+
+Prop 2 (Breadth monotonicity):
+  STER non-increasing in kappa : violations in 0/5000 random paths
+
+Prop 1 (Reduction to TER):
+  d=1 STER == univariate TER   : mismatches in 0/5000 random paths

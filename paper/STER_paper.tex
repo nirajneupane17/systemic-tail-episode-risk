@@ -1,0 +1,321 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage[authoryear,round]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{authblk}
+\usepackage{microtype}
+\newtheorem{proposition}{Proposition}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\VaR}{\mathrm{VaR}}
+\newcommand{\ES}{\mathrm{ES}}
+\newcommand{\TER}{\mathrm{TER}}
+\newcommand{\STER}{\mathrm{STER}}
+\newcommand{\CSTER}{\mathrm{CSTER}}
+\newcommand{\ind}{\mathbf{1}}
+
+\title{\bfseries Systemic Tail Episode Risk:\\ Persistence and Cumulative Severity of Synchronized\\ Extreme-Loss Episodes Across Markets}
+\author{Niraj Neupane, CA (ICAI)}
+\affil{\normalsize Quantitative Researcher, Korvane \quad$\cdot$\quad Financial Economist, Calderyn Institute\\
+\normalsize ORCID: 0009-0003-7026-7026 \quad$\cdot$\quad \texttt{nirajneupane17@gmail.com}}
+\date{Working Paper --- This version: September 2026}
+
+\begin{document}
+\maketitle
+\vspace{-1em}
+\begin{center}\small\itshape
+This paper extends Tail Episode Risk (TER) and Conditional Tail Episode Risk (CTER) --- introduced in the
+author's companion paper on path-dependent tail risk --- to the multivariate, cross-market setting.
+Preliminary working paper circulated for comment. Replication code available from the author.
+\end{center}
+
+\begin{abstract}
+\noindent Systemic-risk measures such as CoVaR, marginal expected shortfall, and co-exceedances quantify the
+\emph{magnitude of contemporaneous joint tail stress}; a related literature measures the \emph{timing} of
+spillover. None targets the \emph{persistence and cumulative severity of a synchronized stress episode}. We
+introduce \textbf{Systemic Tail Episode Risk (STER)}, the conditional upper-tail quantile of the worst
+contiguous, breadth-gated, cross-asset threshold-exceedance episode over a forecast horizon, and its
+conditional extension \textbf{CSTER}. STER is a multivariate max cluster functional; we establish that it
+reduces to univariate TER in one dimension, is monotone in the breadth gate, and separates loss paths that
+existing point-in-time systemic measures rank identically. In simulation, STER rises sharply with cross-asset
+tail dependence while portfolio VaR and ES stay essentially flat --- the cross-sectional analogue of TER's
+response to serial dependence. Empirically, on five markets over 2002--2026, realized STER isolates exactly
+the broad, sustained crises one would want a systemic measure to flag (COVID-2020, the 2008--2009 global
+financial crisis, the April 2025 selloff, August 2015, and Brexit), in economically sensible order. As with
+TER, STER is elicitable while the CSTER product is not, implying component-wise scoring. Consistent with the
+companion paper, we separate the innovation of the risk functional from its conditional-forecasting value,
+which we specify and leave to empirical companion work.
+
+\medskip
+\noindent\textbf{Keywords:} Systemic risk; tail risk; cross-asset contagion; path-dependent risk;
+extreme-value theory; CoVaR.
+
+\noindent\textbf{JEL Classification:} C58; C53; G01; G17; G32.
+\end{abstract}
+
+\section{Introduction}
+The companion paper introduces Tail Episode Risk (TER), $\TER_{\alpha,\beta,H,t}=Q_\beta(S^{*}_{t,H}\mid
+\mathcal F_t)$, the conditional upper-tail quantile of the worst contiguous cumulative threshold-exceedance
+episode $S^{*}_{t,H}$ over a horizon, and shows that it captures a temporal-organization dimension of tail
+risk that marginal Value-at-Risk (VaR) and Expected Shortfall (ES) discard. That framework is univariate.
+Its own adversarial stress tests, however, flag a limitation it cannot resolve: cross-asset contagion is
+inherently multivariate, and a univariate episode functional cannot express the risk that \emph{several}
+markets enter sustained stress \emph{together}.
+
+This paper supplies that extension. The economically important systemic event is not a single deep
+cross-sectional shock, nor a single market's prolonged decline, but a \emph{synchronized and persistent}
+deterioration --- many markets breaching their tails jointly, and staying there. Existing systemic-risk
+measures do not target this object. CoVaR \citep{adrianbrunnermeier2016}, marginal expected shortfall and
+SRISK \citep{acharya2017,brownleesengle2017}, co-exceedance counts \citep{baekarolyistulz2003}, and their
+multivariate and network variants all quantify the \emph{magnitude of contemporaneous joint tail stress}; a
+distinct strand measures the \emph{timing} of spillover, such as the duration-weighted spillover-persistence
+statistic of \citet{cosp}. The persistence-and-cumulative-severity of a joint episode falls between them.
+
+We introduce \textbf{Systemic Tail Episode Risk (STER)}. Fix per-asset tail thresholds and, at each step,
+count the \emph{breadth} of joint exceedance; a \emph{systemic episode} is a contiguous run in which breadth
+meets a gate $\kappa$, and its severity is the cumulative cross-asset excess over the run. STER is the
+conditional upper-tail quantile of the worst such episode over the horizon; its conditional extension CSTER
+decomposes systemic episode risk into an occurrence probability and a conditional severity. The construction
+deliberately reuses the univariate machinery (thresholds $\to$ episodes $\to$ worst-episode severity $\to$
+tail quantile), adding one dimension: cross-market breadth.
+
+We make four points, all established below without overclaiming. First, STER is honestly located: as an
+object it is a \emph{multivariate max cluster functional} \citep{basraksegers2009}, and we claim the
+financial, conditional, breadth-gated, forecast-oriented \emph{application}, not the object. Second, STER is
+distinct from point-in-time systemic measures: we construct loss paths with identical per-asset and portfolio
+marginals and identical co-exceedance counts --- so identical portfolio VaR/ES, CoVaR, and MES --- but
+different STER. Third, simulation shows STER rises with cross-asset tail dependence while portfolio VaR/ES
+stay flat. Fourth, realized STER isolates the broad, sustained historical crises. As in the companion paper,
+we separate \emph{measure innovation} from \emph{forecasting performance}: the conditional-forecasting
+evaluation of CSTER is specified here and carried out in companion empirical work, where --- given the
+rarity of systemic episodes --- we expect it to be, at best, modest.
+
+\section{Related literature and positioning}
+\paragraph{Point-in-time systemic measures.} CoVaR and $\Delta$CoVaR \citep{adrianbrunnermeier2016} measure
+the system's VaR conditional on an institution's distress; marginal expected shortfall and SRISK
+\citep{acharya2017,brownleesengle2017} measure an institution's expected loss when the system is in its
+tail; co-exceedances \citep{baekarolyistulz2003} count simultaneous tail breaches; multivariate and network
+extensions (e.g.\ multivariate CoVaR, tail-risk networks) enrich the cross-section. All evaluate joint tail
+stress \emph{at a point in time}: they are functions of the joint loss distribution on a single date and are
+invariant to the temporal ordering of dates. STER is, by construction, not (Proposition~\ref{prop:sep}).
+
+\paragraph{Temporal systemic measures.} A smaller literature adds a time dimension. Spillover persistence
+\citep{cosp} measures the duration-weighted average \emph{lag} between an institution's loss and the
+system's --- a Macaulay-duration analogue of transmission timing --- not the cumulative severity of a
+contiguous joint-stress run. Duration-based extreme-value models study waiting times \emph{between} extreme
+events. STER differs from both: it measures how severe the worst \emph{sustained, synchronized} episode
+becomes, not how long transmission takes or how long one waits between shocks.
+
+\paragraph{Multivariate extremes.} The probabilistic object underlying STER --- a functional of a cluster of
+joint exceedances of a multivariate regularly-varying series --- belongs to the theory of multivariate tail
+processes and cluster functionals \citep{basraksegers2009}. Exactly as the univariate TER is a cluster
+functional in the sense of \citet{segers2003}, STER is a multivariate max cluster functional. We therefore
+claim novelty only in the financial, conditional, breadth-gated, forecast-oriented formulation, not in the
+underlying functional.
+
+\section{From TER to Systemic Tail Episode Risk}
+\subsection{Breadth-gated systemic episodes}
+Let $L^{i}_{t+k}$ be the loss on asset $i\in\{1,\dots,d\}$ at step $k$ of the horizon $H$, and let
+$q^{i}_{t,\alpha}$ be its conditional tail threshold (the trailing $(1-\alpha)$-quantile of $L^{i}$). Define
+the per-step \emph{breadth} and the weighted cross-asset excess
+\[
+b_{t+k}=\sum_{i=1}^{d}\ind\{L^{i}_{t+k}>q^{i}_{t,\alpha}\},\qquad
+c_{t+k}=\sum_{i=1}^{d}w_i\,(L^{i}_{t+k}-q^{i}_{t,\alpha})_+ ,
+\]
+with portfolio weights $w_i\ge0$, $\sum_i w_i=1$. Fix a breadth gate $\kappa\in\{1,\dots,d\}$. A
+\emph{systemic episode} is a maximal contiguous run of steps with $b_{t+k}\ge\kappa$; on such steps the
+episode accrues severity $c_{t+k}$, and on non-systemic steps it does not. For systemic episode $j$ with
+index set $\mathcal K_j$, its severity is $S^{\mathrm{sys}}_{t,H,j}=\sum_{k\in\mathcal K_j}c_{t+k}$, and the
+worst-episode severity over the horizon is
+\[
+S^{\mathrm{sys}*}_{t,H}=\max_{j}\,S^{\mathrm{sys}}_{t,H,j}\qquad(\,=0\text{ if no systemic episode occurs}).
+\]
+
+\subsection{Systemic Tail Episode Risk and its conditional extension}
+\[
+\boxed{\ \STER_{\alpha,\beta,H,t}=Q_\beta\!\big(S^{\mathrm{sys}*}_{t,H}\mid\mathcal F_t\big)\ }
+\]
+is the conditional upper-tail quantile of the worst systemic episode. Defining the systemic-occurrence event
+$O^{\mathrm{sys}}_{t,H}=\ind\{S^{\mathrm{sys}*}_{t,H}>0\}$, the conditional extension is
+\[
+\CSTER_{\alpha,\beta,H,t}=\underbrace{\Prob(O^{\mathrm{sys}}_{t,H}=1\mid X_t)}_{\text{systemic occurrence}}
+\;\cdot\;\underbrace{\ES_\beta\big[S^{\mathrm{sys}*}_{t,H}\mid O^{\mathrm{sys}}_{t,H}=1,X_t,Z_t\big]}_{\text{conditional systemic severity}},
+\]
+the direct systemic analogue of CTER, separating the likelihood that markets \emph{jointly} enter a
+sustained stress episode from its potential severity.
+
+\section{Theoretical properties}
+Throughout, $\mathcal F_t$ is given, so all thresholds are known and the statements are pathwise.
+
+\begin{proposition}[Reduction to TER]\label{prop:reduce}
+For $d=1$ and any $\kappa$ (necessarily $\kappa=1$), $S^{\mathrm{sys}*}_{t,H}=S^{*}_{t,H}$ and hence
+$\STER_{\alpha,\beta,H,t}=\TER_{\alpha,\beta,H,t}$.
+\end{proposition}
+\begin{proof}
+With $d=1$, $b_{t+k}=\ind\{L_{t+k}>q_{t,\alpha}\}$ and $\kappa=1$, so a systemic step is exactly an
+exceedance and $c_{t+k}=(L_{t+k}-q_{t,\alpha})_+$. Systemic episodes coincide with univariate episodes and
+their severities with $S_{t,H,j}$; the maxima and their conditional quantiles coincide.
+\end{proof}
+
+\begin{proposition}[Breadth monotonicity]\label{prop:mono}
+For every realization, $S^{\mathrm{sys}*}_{t,H}$ is non-increasing in the breadth gate $\kappa$; hence
+$\STER$ is non-increasing in $\kappa$.
+\end{proposition}
+\begin{proof}
+Raising $\kappa$ can only turn systemic steps ($b\ge\kappa$) into non-systemic ones, never the reverse. Each
+episode's index set under $\kappa'>\kappa$ is a subset of its set under $\kappa$ with non-negative accruals
+$c_{t+k}$, so every episode severity is non-increasing, and so is their maximum. Monotone transformation of
+the conditional distribution preserves the quantile ordering.
+\end{proof}
+
+\begin{proposition}[Separation from point-in-time systemic measures]\label{prop:sep}
+There exist loss paths $A,B$ that are temporal reorderings of one another --- hence with identical per-asset
+marginals, identical portfolio-loss marginal (so identical portfolio VaR and ES, CoVaR, and MES) and
+identical co-exceedance counts --- yet with $\STER(A)\neq\STER(B)$.
+\end{proposition}
+\begin{proof}[Proof by construction]
+Take $d=2$, $w=(\tfrac12,\tfrac12)$, thresholds $q=(2,2)$, $\kappa=2$, and the six daily loss vectors
+$\{(4,4),(4,4),(4,4),(0,0),(0,0),(0,0)\}$. Path $A$ orders them clustered,
+$A=((4,4),(4,4),(4,4),(0,0),(0,0),(0,0))$; path $B$ staggers them,
+$B=((4,4),(0,0),(4,4),(0,0),(4,4),(0,0))$. Both use the same multiset of daily vectors, so per-asset
+marginals, the portfolio-loss marginal, and the number of co-exceedance days (three, each with breadth $2$)
+are identical; any measure that is a function of the joint one-period distribution --- portfolio VaR/ES,
+CoVaR, MES, co-exceedance counts --- assigns them equal risk. But $A$ forms one three-day systemic episode
+with severity $S^{\mathrm{sys}*}(A)=3\times(\tfrac12\cdot2+\tfrac12\cdot2)=6$, whereas $B$ forms three
+isolated one-day systemic episodes with $S^{\mathrm{sys}*}(B)=2$. Hence $\STER(A)\neq\STER(B)$.
+\end{proof}
+\noindent Proposition~\ref{prop:sep} is the systemic counterpart of the univariate $A/B$ example and is the
+core distinctness claim: STER responds to the \emph{temporal organization} of joint stress that point-in-time
+systemic measures, by construction, cannot see.
+
+\section{Cross-asset tail dependence: simulation}
+We test whether STER responds to \emph{cross-asset tail dependence} when the marginals and linear
+correlation are held fixed --- the cross-sectional analogue of the companion paper's serial-dependence
+experiment. We simulate $d=6$ assets with standard-normal margins and linear correlation $\rho=0.35$, and
+vary only the \emph{tail} dependence through the degrees of freedom $\nu$ of a $t$-copula (small $\nu$: strong
+joint extremes; large $\nu\to$ Gaussian: weak), reporting the upper tail-dependence coefficient $\lambda$.
+Portfolio VaR/ES are computed on the equal-weight portfolio; STER uses $\kappa=2$, $H=10$, threshold
+$\alpha=95\%$, over $60{,}000$ windows.
+
+\begin{table}[h]\centering
+\caption{As cross-asset tail dependence $\lambda$ rises (with margins and linear correlation fixed), STER
+rises while portfolio VaR/ES stay essentially flat.}
+\begin{tabular}{cccccc}
+\toprule
+$\lambda$ & Portfolio VaR 95\% & Portfolio ES 95\% & STER 95\% & STER 99\% \\
+\midrule
+0.000 & 1.108 & 1.399 & 0.424 & 0.685 \\
+0.026 & 1.101 & 1.406 & 0.451 & 0.764 \\
+0.109 & 1.103 & 1.437 & 0.513 & 0.846 \\
+0.181 & 1.106 & 1.448 & 0.547 & 0.958 \\
+0.238 & 1.081 & 1.448 & 0.592 & 0.991 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent As $\lambda$ rises from $0$ to $0.24$, STER99 increases by roughly $45\%$ ($0.685\to0.991$) while
+portfolio VaR95 is unchanged ($\approx1.10$) and portfolio ES95 rises only $\approx3.5\%$. Cross-asset tail
+dependence materially raises systemic episode risk without proportionally raising portfolio marginal risk.
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.62\linewidth]{figs_sim.pdf}
+\caption{Simulation: STER (especially at $99\%$) rises with cross-asset upper tail dependence $\lambda$ while
+portfolio VaR/ES remain flat.}
+\end{figure}
+
+\section{Elicitability and scoring}
+The evaluation results of the companion paper transfer directly. $\STER=Q_\beta(S^{\mathrm{sys}*}_{t,H}\mid
+\mathcal F_t)$ is a conditional quantile of the observable, $\mathcal F_{t+H}$-measurable random variable
+$S^{\mathrm{sys}*}_{t,H}$; it is therefore \emph{elicitable}, strictly consistently scored by the pinball
+loss, and admits a model-free coverage backtest $\E[\ind\{S^{\mathrm{sys}*}_{t,H}\le\STER\}\mid\mathcal F_t]
+=\beta$. The CSTER product $p_t m_t$ inherits the non-elicitability of the CTER product: the same
+convex-level-sets argument applies, so CSTER must be evaluated component-wise --- systemic occurrence by a
+probability score, conditional systemic severity by a Fissler--Ziegel score on the systemic-episode
+subsample.
+
+\section{Empirical evidence: does STER flag systemic crises?}
+As an economic reality check we compute realized $S^{\mathrm{sys}*}_{t,H}$ on five markets that span the
+2008 crisis --- the S\&P~500, Nasdaq, the 20+ year Treasury ETF (TLT), EUR/USD, and USD/JPY --- daily over
+2002--2026 (common sample $6{,}012$ observations), with $W=1{,}250$, $H=10$, $\alpha=95\%$, $\kappa=2$,
+equal weights. Table~\ref{tab:emp} lists the worst distinct systemic episodes.
+
+\begin{table}[h]\centering
+\caption{Worst distinct realized systemic episodes (cumulative breadth-gated joint severity, \%).}
+\label{tab:emp}
+\begin{tabular}{lc}
+\toprule
+Episode (date) & $S^{\mathrm{sys}*}$ (\%) \\
+\midrule
+Mar 2020 (COVID) & 8.34 \\
+Sep 2008 (Lehman / GFC) & 6.18 \\
+Nov 2008 (GFC) & 3.77 \\
+Apr 2025 (selloff) & 3.59 \\
+Jan 2009 (GFC aftermath) & 2.81 \\
+Aug 2015 (China / global selloff) & 2.58 \\
+May 2022 (bear market) & 2.01 \\
+Jun 2016 (Brexit) & 1.81 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent STER isolates precisely the broad, sustained, cross-market crises, in economically sensible order:
+COVID-2020 dominates, followed by the Lehman peak and the wider 2008--2009 global financial crisis, the
+April 2025 selloff, the August 2015 global selloff, the 2022 bear market, and Brexit. Notably, episodes that
+are severe but \emph{market-specific} rather than broadly synchronized do not top the systemic ranking ---
+the intended behavior of a breadth-gated measure, and a point of contrast with the univariate TER ranking of
+the companion paper.
+
+\begin{figure}[h]\centering
+\includegraphics[width=0.92\linewidth]{figs_emp.pdf}
+\caption{Realized systemic tail-episode severity across five markets, 2002--2026. The largest spikes
+coincide with the 2008--2009 crisis, the 2020 COVID crash, and the 2025 selloff.}
+\end{figure}
+
+\section{Conditional forecasting: specification}
+CSTER poses the systemic forecasting question: how likely are markets to \emph{jointly} enter a sustained
+stress episode, and how severe could it be? Its evaluation follows the companion paper exactly ---
+systemic-occurrence discrimination by Brier score and AUC, conditional systemic severity by a
+Fissler--Ziegel score on the systemic-episode subsample, and an incremental test comparing a conditioned
+model against a parsimonious volatility/dependence baseline, all under a purged walk-forward protocol. We
+report this specification here and defer the empirical forecasting results to companion work, for a reason
+of scientific candor rather than convenience: systemic episodes are rarer than univariate ones, so the
+conditional layer will be estimated on thin data and, consistent with the companion paper's univariate null,
+we do not anticipate a large incremental forecasting gain. As there, the contribution is the functional and
+its properties; the forecasting layer is reported honestly, whatever it shows.
+
+\section{Limitations}
+(i) \emph{Prior art.} The underlying object is a multivariate cluster functional \citep{basraksegers2009};
+the contribution is the financial, conditional, breadth-gated formulation, not the functional. (ii)
+\emph{Crowded neighborhood.} Systemic-risk measurement is densely populated; STER's value rests on the
+temporal-persistence dimension and its sharp distinction from CoVaR/MES and from spillover persistence.
+(iii) \emph{Design parameters.} STER adds a breadth gate $\kappa$ to the threshold $\alpha$ and horizon $H$;
+robustness across $(\kappa,\alpha,H)$ is required and follows the companion paper's grid methodology. (iv)
+\emph{Sparse systemic events.} Deep-tail and conditional-forecasting estimates are data-limited. (v)
+\emph{Static weights and thresholds.} Time-varying weights, liquidity-adjusted losses, and covariate-driven
+breadth gates are natural extensions.
+
+\section{Conclusion}
+Systemic risk has a temporal dimension that point-in-time comovement measures discard: extreme losses across
+markets can arrive synchronized and \emph{persist}. Systemic Tail Episode Risk formalizes the severity of the
+worst such synchronized, sustained episode as a conditional quantile of a multivariate max cluster
+functional. We showed that STER reduces to TER in one dimension, is monotone in breadth, and --- by
+construction --- separates joint-stress paths that portfolio VaR/ES, CoVaR, MES, and co-exceedance counts
+rank identically; that it rises with cross-asset tail dependence while portfolio VaR/ES stay flat; and that
+realized STER isolates the broad, sustained historical crises. Whether the conditional extension forecasts
+these episodes better than a parsimonious baseline is, as in the univariate case, a separate and open
+question, to be answered honestly in companion empirical work.
+
+\begin{thebibliography}{99}
+\bibitem[Acharya et al.(2017)]{acharya2017} Acharya, V.\ V., Pedersen, L.\ H., Philippon, T., \& Richardson, M.\ 2017. Measuring systemic risk. \emph{Review of Financial Studies} 30: 2--47.
+\bibitem[Adrian and Brunnermeier(2016)]{adrianbrunnermeier2016} Adrian, T., \& Brunnermeier, M.\ K.\ 2016. CoVaR. \emph{American Economic Review} 106: 1705--1741.
+\bibitem[Bae et al.(2003)]{baekarolyistulz2003} Bae, K.-H., Karolyi, G.\ A., \& Stulz, R.\ M.\ 2003. A new approach to measuring financial contagion. \emph{Review of Financial Studies} 16: 717--763.
+\bibitem[Basrak and Segers(2009)]{basraksegers2009} Basrak, B., \& Segers, J.\ 2009. Regularly varying multivariate time series. \emph{Stochastic Processes and their Applications} 119: 1055--1080.
+\bibitem[Brownlees and Engle(2017)]{brownleesengle2017} Brownlees, C., \& Engle, R.\ F.\ 2017. SRISK: a conditional capital shortfall measure of systemic risk. \emph{Review of Financial Studies} 30: 48--79.
+\bibitem[Segers(2003)]{segers2003} Segers, J.\ 2003. Functionals of clusters of extremes. \emph{Advances in Applied Probability} 35: 1028--1045.
+\bibitem[(Spillover persistence working paper)]{cosp} Spillover persistence ($\Delta$CoSP): a duration-based systemic-risk statistic. Working paper. [Full citation to be verified before submission.]
+\end{thebibliography}
+
+\end{document}
